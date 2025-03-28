@@ -1,0 +1,17 @@
+<div class="container">
+  <h1>Catálogo de Livros</h1>
+  <div>
+    <h2>Adicionar Livro</h2>
+    <input [(ngModel)]="newBook.title" placeholder="Título" />
+    <input [(ngModel)]="newBook.author" placeholder="Autor" />
+    <input [(ngModel)]="newBook.publicationYear" type="number" placeholder="Ano" />
+    <button (click)="addBook()">Adicionar</button>
+  </div>
+  <h2>Lista de Livros</h2>
+  <ul>
+    <li *ngFor="let book of books">
+      {{ book.title }} - {{ book.author }} ({{ book.publicationYear }})
+    </li>
+  </ul>
+  <footer>© 2025 Biblioteca Virtual - Todos os direitos reservados</footer>
+</div>
