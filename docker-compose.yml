@@ -19,7 +19,7 @@ services:
       - "8080:8080"
     depends_on:
       - db
-    # Removido environment para evitar conflito com application.properties
+
 
   frontend:
     build:
