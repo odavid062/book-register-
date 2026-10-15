@@ -56,6 +56,11 @@ flowchart LR
 
 ## Como Executar
 
+### Pré-requisitos
+
+- **Com Docker (recomendado)**: [Docker](https://www.docker.com/) e Docker Compose instalados.
+- **Execução manual**: [Java 17 (JDK)](https://openjdk.org/projects/jdk/17/), [Node.js 18+](https://nodejs.org/) (com npm) e [PostgreSQL 15](https://www.postgresql.org/) em execução.
+
 ### Com Docker (recomendado)
 
 ```bash
@@ -73,19 +78,46 @@ docker compose up --build
 
 ### Manualmente
 
-**Backend:**
+**1. Banco de Dados:**
+Certifique-se de que o PostgreSQL esteja em execução (porta 5432) com um banco de dados criado (padrão: `book_db`).
+
+**2. Backend:**
 ```bash
 cd book-backend/backend
+# Linux / macOS:
 ./mvnw spring-boot:run
+# Windows:
+.\mvnw.cmd spring-boot:run
 ```
+*Nota: Ao rodar fora do Docker, se o banco não estiver no host `db`, configure a variável `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/book_db` (ou conforme sua instância).*
 
-**Frontend:**
+**3. Frontend:**
 ```bash
 cd book-frontend/spa-book-register
 npm install
-ng serve
+npm start   # ou: ng serve
 ```
 Acesse em http://localhost:4200
+
+---
+
+## Variáveis de Ambiente
+
+O projeto suporta configuração via variáveis de ambiente para a inicialização dos contêineres e conexão com o banco de dados. Um modelo está disponível no arquivo [.env.example](file:///.env.example):
+
+| Variável | Descrição | Padrão no Código |
+|---|---|---|
+| `DB_USER` | Usuário administrador do PostgreSQL | `admin` |
+| `DB_PASSWORD` | Senha do PostgreSQL | `changeme` |
+| `DB_NAME` | Nome da base de dados PostgreSQL | `book_db` |
+| `SPRING_DATASOURCE_URL` | URL JDBC de conexão do backend | `jdbc:postgresql://db:5432/book_db` |
+| `SPRING_DATASOURCE_USERNAME` | Usuário para conexão JDBC do Spring Boot | `admin` |
+| `SPRING_DATASOURCE_PASSWORD` | Senha para conexão JDBC do Spring Boot | `changeme` |
+
+Para customizar as credenciais com o Docker Compose, copie `.env.example` para `.env`:
+```bash
+cp .env.example .env
+```
 
 ---
 
@@ -117,23 +149,56 @@ book-register-/
 ├── .github/workflows/
 │   └── ci.yml                          # Pipeline CI: build + testes Maven
 ├── book-backend/
-│   ├── Dockerfile
+│   ├── Dockerfile                      # Build multi-stage Maven + OpenJDK 17
 │   └── backend/
-│       └── src/main/java/book/backend/
-│           ├── controller/
-│           │   └── BookController.java  # GET e POST /api/books
-│           ├── model/
-│           │   └── BookModel.java       # Entidade JPA (id, title, author, publicationYear)
-│           ├── repository/
-│           │   └── BookRepository.java  # Spring Data JPA
-│           └── CorsConfig.java
+│       ├── pom.xml                     # Configuração Maven e dependências (Spring Boot 3.4.4)
+│       └── src/
+│           ├── main/
+│           │   ├── java/book/backend/
+│           │   │   ├── controller/
+│           │   │   │   └── BookController.java  # GET e POST /api/books
+│           │   │   ├── model/
+│           │   │   │   └── BookModel.java       # Entidade JPA (id, title, author, publicationYear)
+│           │   │   ├── repository/
+│           │   │   │   └── BookRepository.java  # Spring Data JPA
+│           │   │   └── CorsConfig.java          # Configuração de CORS para o frontend
+│           │   └── resources/
+│           │       └── application.properties   # Configuração do datasource e JPA
+│           └── test/
+│               └── java/book/backend/
+│                   └── BackendApplicationTests.java # Testes de contexto Spring Boot
 ├── book-frontend/spa-book-register/
+│   ├── Dockerfile                      # Build multi-stage Node 18 + Nginx
+│   ├── package.json                    # Dependências e scripts Angular 19
 │   └── src/app/
-│       ├── app.component.html           # Formulário + listagem
+│       ├── app.component.html           # Formulário + listagem de livros
+│       ├── app.component.ts             # Lógica e integração com BookService
 │       ├── book.service.ts              # HttpClient para /api/books
-│       └── book.ts                      # Interface Book
-├── docker-compose.yml
+│       └── book.ts                      # Interface TypeScript Book
+├── .env.example                        # Variáveis de ambiente de exemplo
+├── docker-compose.yml                  # Configuração dos serviços Docker (db, backend, frontend)
 └── README.md
+```
+
+---
+
+## Testes
+
+### Backend
+Para rodar os testes automatizados do Spring Boot (JUnit 5):
+```bash
+cd book-backend/backend
+# Linux / macOS:
+./mvnw clean verify
+# Windows:
+.\mvnw.cmd clean verify
+```
+
+### Frontend
+Para rodar os testes unitários da aplicação Angular com Karma:
+```bash
+cd book-frontend/spa-book-register
+npm test
 ```
 
 ---
